@@ -1,7 +1,9 @@
+use std::ops::Range;
 use crate::rom::Rom;
 
 const MAX_MEMORY_ADDRESS: usize = 4096;
 
+#[derive(Debug)]
 pub struct Memory {
     addressable_storage: [u8; MAX_MEMORY_ADDRESS],
     stack: [u16; 16],
@@ -25,5 +27,9 @@ impl Memory {
             }
             self.addressable_storage[address] = rom.content[rom_offset];
         }
+    }
+
+    pub fn get_values_in_range(&self, address: Range<usize>) -> &[u8] {
+        &self.addressable_storage[address]
     }
 }
