@@ -2,8 +2,8 @@ mod cpu;
 mod memory;
 mod display;
 mod rom;
+mod register;
 
-use std::io::Error;
 use crate::cpu::Cpu;
 use crate::memory::Memory;
 use crate::rom::Rom;

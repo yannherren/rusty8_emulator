@@ -1,5 +1,5 @@
-use std::ops::Range;
 use crate::rom::Rom;
+use std::ops::Range;
 
 const MAX_MEMORY_ADDRESS: usize = 4096;
 
