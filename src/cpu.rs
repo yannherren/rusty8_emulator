@@ -8,6 +8,7 @@ const INSTRUCTION_SIZE_BYTES: usize = 2;
 pub struct Cpu {
     timer_register: Register<u8>,
     sound_register: Register<u8>,
+    carry_flag_register: Register<u8>,
     stack_pointer: u8,
     instruction_pointer: usize,
     gp_registers: HashMap<String, Register<u8>>,
@@ -18,6 +19,7 @@ impl Cpu {
         Cpu {
             timer_register: Register::new(),
             sound_register: Register::new(),
+            carry_flag_register: Register::new(),
             stack_pointer: 0,
             instruction_pointer: 0,
             gp_registers: HashMap::from([
@@ -66,6 +68,10 @@ impl Cpu {
         self.gp_registers.entry(format!("V{}", reg_number.to_string())).or_insert(Register::new())
     }
 
+    fn get_gp_reg_value(&self, reg_number: u16) -> u8 {
+        self.gp_registers.get(&format!("V{}", reg_number.to_string())).unwrap_or(&Register::new()).value
+    }
+
     fn run_from_instruction(&mut self, instruction: u16) {
         if instruction == 0 {
             return;
@@ -87,14 +93,31 @@ impl Cpu {
             0x7000..=0x7FFF => self.get_gp_reg(instruction & 0x0F00).add((instruction & 0x00F0) as u8),
             0x8000..=0x8FFF => match instruction & 0xF00F {
                 0x8000 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
                     let vx = self.get_gp_reg(instruction & 0x0F00);
-                    let vy = self.get_gp_reg(instruction & 0x00F0);
-                    vx.set_from_reg(vy);
+                    vx.set(vy_value);
                 },
-                0x8001 => unimplemented!(),
-                0x8002 => unimplemented!(),
-                0x8003 => unimplemented!(),
-                0x8004 => unimplemented!(),
+                0x8001 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
+                    let vx = self.get_gp_reg(instruction & 0x0F00);
+                    vx.or(vy_value);
+                }
+                0x8002 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
+                    let vx = self.get_gp_reg(instruction & 0x0F00);
+                    vx.and(vy_value);
+                },
+                0x8003 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
+                    let vx = self.get_gp_reg(instruction & 0x0F00);
+                    vx.xor(vy_value);
+                },
+                0x8004 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
+                    let vx = self.get_gp_reg(instruction & 0x0F00);
+                    let cf_value = vx.add_with_carry(vy_value);
+                    self.carry_flag_register.set(cf_value);
+                },
                 0x8005 => unimplemented!(),
                 0x8006 => unimplemented!("Set Vx = Vx SHR 1"),
                 0x8007 => unimplemented!(),

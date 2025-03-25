@@ -17,7 +17,7 @@ impl UnsignedNum for u64 {}
 impl UnsignedNum for u128 {}
 
 pub struct Register<T: UnsignedNum> {
-    value: T
+    pub value: T
 }
 
 impl<T: UnsignedNum> Register<T> {
@@ -48,22 +48,21 @@ impl<T: UnsignedNum> Register<T> {
         self.value = self.value - reg.value;
     }
 
-    pub fn or(&mut self, reg: &Register<T>) {
-        self.value = self.value | reg.value;
+    pub fn or(&mut self, value: T) {
+        self.value = self.value | value;
     }
 
-    pub fn and(&mut self, reg: &Register<T>) {
-        self.value = self.value & reg.value;
+    pub fn and(&mut self, value: T) {
+        self.value = self.value & value;
     }
 
-    pub fn xor(&mut self, reg: &Register<T>) {
-        self.value = self.value ^ reg.value;
+    pub fn xor(&mut self, value: T) {
+        self.value = self.value ^ value;
     }
 
-    pub fn add_with_carry(&mut self, reg: &Register<T>, cf_reg: &mut Register<T>) {
-        let carry = self.value.checked_add(&reg.value).is_none();
-        self.value = self.value.wrapping_add(&reg.value);
-        let carry_value = if carry {zero()} else { one() };
-        cf_reg.set(carry_value);
+    pub fn add_with_carry(&mut self, value: T) -> T {
+        let carry = self.value.checked_add(&value).is_none();
+        self.value = self.value.wrapping_add(&value);
+        if carry {zero()} else { one() }
     }
 }
