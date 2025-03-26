@@ -1,14 +1,18 @@
-use num_traits::{one, zero, CheckedAdd, Unsigned, WrappingAdd};
+use num_traits::{CheckedAdd, Unsigned, WrappingAdd, one, zero, CheckedShr};
 use std::ops::{BitAnd, BitOr, BitXor};
 
 pub trait UnsignedNum:
     Copy
+    + PartialOrd
     + Unsigned
     + BitOr<Output = Self>
     + BitXor<Output = Self>
     + BitAnd<Output = Self>
     + CheckedAdd<Output = Self>
-    + WrappingAdd<Output = Self> {}
+    + CheckedShr<Output = Self>
+    + WrappingAdd<Output = Self>
+{
+}
 
 impl UnsignedNum for u8 {}
 impl UnsignedNum for u16 {}
@@ -17,15 +21,12 @@ impl UnsignedNum for u64 {}
 impl UnsignedNum for u128 {}
 
 pub struct Register<T: UnsignedNum> {
-    pub value: T
+    pub value: T,
 }
 
 impl<T: UnsignedNum> Register<T> {
-
     pub fn new() -> Self {
-        Register {
-            value: T::zero()
-        }
+        Register { value: T::zero() }
     }
 
     pub fn set(&mut self, new_value: T) {
@@ -60,9 +61,28 @@ impl<T: UnsignedNum> Register<T> {
         self.value = self.value ^ value;
     }
 
+    pub fn shr(&mut self, value: T, shift_count: T) -> T {
+        let mut vf_flag = T::zero();
+        if value & T::one() == T::one() {
+            vf_flag = T::one();
+        }
+        self.value = self.value >> shift_count;
+        vf_flag
+    }
+
     pub fn add_with_carry(&mut self, value: T) -> T {
         let carry = self.value.checked_add(&value).is_none();
         self.value = self.value.wrapping_add(&value);
-        if carry {zero()} else { one() }
+        if carry { T::zero() } else { T::one() }
+    }
+
+    pub fn sub_with_borrow(&mut self, value: T) -> T {
+        let mut borrow = T::zero();
+        if value > self.value {
+            borrow = T::one();
+        }
+        self.set(self.value - value);
+
+        borrow
     }
 }

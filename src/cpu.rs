@@ -118,7 +118,12 @@ impl Cpu {
                     let cf_value = vx.add_with_carry(vy_value);
                     self.carry_flag_register.set(cf_value);
                 },
-                0x8005 => unimplemented!(),
+                0x8005 => {
+                    let vy_value = self.get_gp_reg_value(instruction & 0x00F0);
+                    let vx = self.get_gp_reg(instruction & 0x0F00);
+                    let borrow_value = vx.sub_with_borrow(vy_value);
+                    self.carry_flag_register.set(borrow_value);
+                }
                 0x8006 => unimplemented!("Set Vx = Vx SHR 1"),
                 0x8007 => unimplemented!(),
                 0x800E => unimplemented!("here"),
